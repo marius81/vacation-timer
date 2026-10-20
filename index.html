@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="description" content="Shareable live countdown timer for your upcoming vacation. Customize, share a link with friends, and count down the seconds!">
+  <meta property="og:title" content="Vacation Countdown Timer">
+  <meta property="og:description" content="Count down the days, hours, and minutes until vacation time!">
+  <meta property="og:type" content="website">
+  <title>Vacation Countdown</title>
+  <link rel="icon" id="favicon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220%22%3E<text y=%2226%22 font-size=%2226%22>✈️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="tropical">
+  <!-- Dynamic Background Canvas & Ambience -->
+  <canvas id="ambient-canvas" class="ambient-canvas" aria-hidden="true"></canvas>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <!-- Header Actions -->
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-icon" id="brand-icon">🏖️</span>
+      <span class="brand-text">Vacation Tracker</span>
+    </div>
+
+    <div class="action-bar">
+      <button id="theme-btn" class="icon-btn" title="Cycle Theme" aria-label="Cycle theme">
+        <span class="btn-icon">🎨</span>
+      </button>
+      <button id="fullscreen-btn" class="icon-btn" title="Toggle Fullscreen" aria-label="Toggle fullscreen">
+        <span class="btn-icon">⛶</span>
+      </button>
+      <button id="edit-btn" class="secondary-btn">
+        <span>✏️</span> Edit Vacation
+      </button>
+      <button id="share-btn" class="primary-btn">
+        <span>🔗</span> Share Timer
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Timer Display -->
+  <main class="main-content">
+    <div class="timer-card">
+      <div class="trip-badge" id="trip-badge">
+        <span class="badge-dot"></span>
+        <span id="trip-status">Counting Down</span>
+      </div>
+
+      <h1 class="trip-title" id="display-title">Tropical Island Getaway</h1>
+      <p class="trip-target-date" id="display-target-date">Departing Friday, November 20, 2026</p>
+
+      <!-- Digital Countdown Grid -->
+      <div class="countdown-grid" id="countdown-grid" role="timer" aria-live="polite">
+        <div class="time-block">
+          <div class="time-value-card">
+            <span class="time-value" id="val-days">00</span>
+          </div>
+          <span class="time-label">Days</span>
+        </div>
+
+        <div class="time-separator" aria-hidden="true">:</div>
+
+        <div class="time-block">
+          <div class="time-value-card">
+            <span class="time-value" id="val-hours">00</span>
+          </div>
+          <span class="time-label">Hours</span>
+        </div>
+
+        <div class="time-separator" aria-hidden="true">:</div>
+
+        <div class="time-block">
+          <div class="time-value-card">
+            <span class="time-value" id="val-minutes">00</span>
+          </div>
+          <span class="time-label">Minutes</span>
+        </div>
+
+        <div class="time-separator" aria-hidden="true">:</div>
+
+        <div class="time-block">
+          <div class="time-value-card">
+            <span class="time-value" id="val-seconds">00</span>
+          </div>
+          <span class="time-label">Seconds</span>
+        </div>
+      </div>
+
+      <!-- Vacation Arrived Banner (Hidden by default) -->
+      <div class="vacation-celebration hidden" id="celebration-box">
+        <div class="celebration-emoji">🎉🍹🥳🌴</div>
+        <h2>PACK YOUR BAGS! IT'S VACATION TIME!</h2>
+        <p id="time-spent-badge">Time on vacation: 0m 0s</p>
+      </div>
+
+      <!-- Progress Section -->
+      <div class="progress-section" id="progress-container">
+        <div class="progress-header">
+          <span class="progress-label" id="progress-status-label">Journey Progress</span>
+          <span class="progress-percentage" id="progress-percent">0%</span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill" id="progress-fill" style="width: 0%;"></div>
+        </div>
+        <div class="progress-details">
+          <span id="start-date-text">Planned</span>
+          <span id="remaining-hours-text">Calculating...</span>
+        </div>
+      </div>
+
+      <!-- Quote / Mood Booster -->
+      <div class="quote-box" id="quote-box">
+        <span class="quote-icon">💭</span>
+        <span class="quote-text" id="quote-text">"Good things come to those who book the ticket."</span>
+      </div>
+
+      <!-- Quick Checklist / Packing Preview -->
+      <div class="packing-accordion">
+        <button class="accordion-header" id="accordion-toggle" aria-expanded="false">
+          <span class="accordion-title">🧳 Vacation Packing & Prep Checklist (<span id="pack-count">0/5</span>)</span>
+          <span class="accordion-arrow">▼</span>
+        </button>
+        <div class="accordion-content hidden" id="accordion-content">
+          <ul class="checklist-items" id="checklist-items">
+            <!-- Dynamically populated or editable -->
+          </ul>
+          <form class="add-item-form" id="add-item-form">
+            <input type="text" id="new-item-input" placeholder="Add packing item (e.g., Sunscreen, Passport)..." maxlength="40">
+            <button type="submit" class="small-btn">+ Add</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer with Share Callout -->
+  <footer class="app-footer">
+    <p>Share this vacation link with your travel buddies so everyone counts down together!</p>
+    <div class="footer-links">
+      <button class="text-btn" id="footer-share-link">Copy Share Link</button>
+      <span>•</span>
+      <button class="text-btn" id="footer-reset-btn">Reset to Today</button>
+    </div>
+  </footer>
+
+  <!-- Modal: Edit Vacation Settings -->
+  <dialog id="edit-dialog" class="custom-dialog">
+    <form method="dialog" class="dialog-content" id="edit-form">
+      <div class="dialog-header">
+        <h2>✏️ Customize Your Vacation</h2>
+        <button type="button" class="close-btn" id="close-edit-dialog" aria-label="Close">✕</button>
+      </div>
+
+      <div class="dialog-body">
+        <div class="form-group">
+          <label for="input-title">Vacation Name / Destination</label>
+          <input type="text" id="input-title" required placeholder="e.g. Hawaii Beach Trip, Tour de France" maxlength="50">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="input-date">Departure Date & Time</label>
+            <input type="datetime-local" id="input-date" required>
+          </div>
+          <div class="form-group icon-picker-group">
+            <label for="input-icon">Icon Emoji</label>
+            <select id="input-icon">
+              <option value="🏖️">🏖️ Beach</option>
+              <option value="🌴">🌴 Tropical</option>
+              <option value="✈️">✈️ Flight</option>
+              <option value="🏔️">🏔️ Mountains</option>
+              <option value="⛷️">⛷️ Skiing</option>
+              <option value="🚢">🚢 Cruise</option>
+              <option value="⛺">⛺ Camping</option>
+              <option value="🏰">🏰 Europe / City</option>
+              <option value="Road Trip">🚗 Road Trip</option>
+              <option value="🍹">🍹 Relaxation</option>
+              <option value="🌸">🌸 Japan / Spring</option>
+              <option value="☀️">☀️ Sunshine</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Theme & Atmosphere</label>
+          <div class="theme-options-grid" id="theme-selector-grid">
+            <label class="theme-card-option" data-theme="tropical">
+              <input type="radio" name="theme-radio" value="tropical" checked>
+              <span class="theme-preview tropical-grad"></span>
+              <span class="theme-name">Tropical</span>
+            </label>
+            <label class="theme-card-option" data-theme="sunset">
+              <input type="radio" name="theme-radio" value="sunset">
+              <span class="theme-preview sunset-grad"></span>
+              <span class="theme-name">Sunset</span>
+            </label>
+            <label class="theme-card-option" data-theme="alpine">
+              <input type="radio" name="theme-radio" value="alpine">
+              <span class="theme-preview alpine-grad"></span>
+              <span class="theme-name">Alpine</span>
+            </label>
+            <label class="theme-card-option" data-theme="midnight">
+              <input type="radio" name="theme-radio" value="midnight">
+              <span class="theme-preview midnight-grad"></span>
+              <span class="theme-name">Midnight</span>
+            </label>
+            <label class="theme-card-option" data-theme="emerald">
+              <input type="radio" name="theme-radio" value="emerald">
+              <span class="theme-preview emerald-grad"></span>
+              <span class="theme-name">Emerald</span>
+            </label>
+            <label class="theme-card-option" data-theme="sakura">
+              <input type="radio" name="theme-radio" value="sakura">
+              <span class="theme-preview sakura-grad"></span>
+              <span class="theme-name">Sakura</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="input-custom-note">Custom Travel Subtitle / Note (Optional)</label>
+          <input type="text" id="input-custom-note" placeholder="e.g. Flights booked on Delta #402, staying in Maui" maxlength="80">
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button type="button" class="secondary-btn" id="cancel-edit-btn">Cancel</button>
+        <button type="submit" class="primary-btn">Save & Update Timer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal: Share Timer -->
+  <dialog id="share-dialog" class="custom-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2>🔗 Share Vacation Timer</h2>
+        <button type="button" class="close-btn" id="close-share-dialog" aria-label="Close">✕</button>
+      </div>
+
+      <div class="dialog-body">
+        <p class="dialog-desc">Anyone with this link will see your exact countdown, vacation name, theme, and packing list!</p>
+
+        <div class="share-url-container">
+          <input type="text" id="share-url-input" readonly>
+          <button type="button" class="primary-btn" id="copy-url-btn">
+            <span>📋</span> Copy Link
+          </button>
+        </div>
+
+        <div class="native-share-container" id="native-share-container">
+          <button type="button" class="share-sheet-btn" id="native-share-btn">
+            <span>📲</span> Open Phone Share Menu (WhatsApp, iMessage, etc.)
+          </button>
+        </div>
+
+        <!-- QR Code Section -->
+        <div class="qr-code-section">
+          <p class="qr-title">Or scan QR code to open on mobile:</p>
+          <div class="qr-canvas-wrapper">
+            <canvas id="qr-canvas" width="180" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button type="button" class="secondary-btn" id="close-share-btn">Done</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden" role="status" aria-live="polite">
+    <span class="toast-icon">✅</span>
+    <span class="toast-message" id="toast-message">Link copied to clipboard!</span>
+  </div>
+
+  <!-- Confetti Canvas for celebration -->
+  <canvas id="confetti-canvas" class="confetti-canvas" aria-hidden="true"></canvas>
+
+  <script src="script.js"></script>
+</body>
+</html>
